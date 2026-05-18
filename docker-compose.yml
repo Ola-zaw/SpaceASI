@@ -1,0 +1,39 @@
+services:
+
+  db:
+    image: postgres:16
+
+    container_name: space_postgres
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: space_db
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+
+    container_name: space_backend
+
+    ports:
+      - "8000:8000"
+
+    depends_on:
+      - db
+
+  ingestion:
+    build: ./ingestion
+
+    container_name: space_ingestion
+
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
