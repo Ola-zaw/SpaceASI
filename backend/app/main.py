@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 
 from app.database import engine, SessionLocal
 from app.models import Base, ISSPosition
+from app.models import Asteroid
+from app.models import APOD
 
 app = FastAPI()
 
@@ -77,3 +79,44 @@ def get_all_iss():
         })
 
     return result
+
+
+@app.get("/asteroids")
+def get_asteroids():
+
+    db: Session = SessionLocal()
+
+    asteroids = db.query(Asteroid).all()
+
+    result = []
+
+    for asteroid in asteroids:
+
+        result.append({
+            "name": asteroid.name,
+            "diameter": asteroid.diameter,
+            "velocity": asteroid.velocity,
+            "miss_distance": asteroid.miss_distance,
+            "hazardous": asteroid.hazardous,
+            "date": asteroid.close_approach_date
+        })
+
+    return result
+
+@app.get("/apod/latest")
+def get_latest_apod():
+
+    db: Session = SessionLocal()
+
+    latest_apod = (
+        db.query(APOD)
+        .order_by(APOD.id.desc())
+        .first()
+    )
+
+    return {
+        "title": latest_apod.title,
+        "image_url": latest_apod.image_url,
+        "explanation": latest_apod.explanation,
+        "date": latest_apod.apod_date
+    }

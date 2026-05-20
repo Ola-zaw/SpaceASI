@@ -8,4 +8,4 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-CMD ["python", "ingest_iss.py"]
+CMD ["python", "ingest.py"]
