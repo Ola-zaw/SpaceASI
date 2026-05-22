@@ -35,7 +35,9 @@ class Asteroid(Base):
 
     id = Column(Integer, primary_key=True)
 
-    name = Column(String)
+    name = Column(
+    String,
+    unique=True)
 
     diameter = Column(Float)
 

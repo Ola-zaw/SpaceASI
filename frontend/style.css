@@ -1,18 +1,143 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 40px;
-    background: #111;
-    color: white;
+body{
+background:#081018;
+color:white;
 }
 
-section {
-    margin-bottom: 40px;
-    padding: 20px;
-    border: 1px solid #444;
-    border-radius: 10px;
+.container{
+max-width:1500px;
 }
 
-img {
-    max-width: 500px;
-    border-radius: 10px;
+.card{
+
+background:#131d2e;
+
+padding:20px;
+
+border-radius:15px;
+
+border:1px solid #273552;
+
+color:white;
+
+margin-bottom:20px;
+
+}
+
+
+.card h3,
+.card h5,
+th,
+td,
+p,
+div{
+
+color:white !important;
+
+}
+
+
+#iss-map{
+
+height:420px;
+
+width:100%;
+
+border-radius:12px;
+
+}
+
+
+#iss-coords{
+
+color:#ffffff;
+
+text-align:center;
+
+font-size:18px;
+
+}
+
+
+#apod-container{
+
+display:flex;
+
+flex-direction:column;
+
+align-items:center;
+
+}
+
+
+.apod-img{
+
+width:100%;
+
+max-height:340px;
+
+object-fit:cover;
+
+border-radius:10px;
+
+}
+
+
+.apod-title{
+
+color:#87d8ff;
+
+margin-top:10px;
+
+}
+
+
+.apod-description{
+
+color:white;
+
+line-height:1.6;
+
+margin-top:10px;
+
+}
+
+
+.table{
+
+color:white !important;
+
+}
+
+
+.table td,
+.table th{
+
+color:white !important;
+
+}
+
+
+.hazard{
+
+color:#ff7272 !important;
+
+font-weight:bold;
+
+}
+
+
+.safe{
+
+color:#7dff95 !important;
+
+font-weight:bold;
+
+}
+
+
+#asteroidsChart,
+#distanceChart{
+
+height:220px !important;
+
 }

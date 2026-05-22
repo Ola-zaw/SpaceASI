@@ -1,3 +1,4 @@
+import os
 import requests
 
 from sqlalchemy import (
@@ -24,10 +25,20 @@ SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
 
 
+API_KEY = os.getenv(
+    "NASA_API_KEY",
+    "DEMO_KEY"
+)
+
+
 class Asteroid(Base):
+
     __tablename__ = "asteroids"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(
+        Integer,
+        primary_key=True
+    )
 
     name = Column(String)
 
@@ -45,67 +56,152 @@ class Asteroid(Base):
 def fetch_asteroids():
 
     url = (
-        "https://api.nasa.gov/neo/rest/v1/feed"
-        "?api_key=DEMO_KEY"
+        f"https://api.nasa.gov/neo/rest/v1/feed"
+        f"?api_key={API_KEY}"
     )
 
-    response = requests.get(url)
+    response = requests.get(
+        url,
+        timeout=20
+    )
 
     data = response.json()
 
-    near_earth_objects = data["near_earth_objects"]
+
+    if (
+        "near_earth_objects"
+        not in data
+    ):
+
+        print(
+            "Asteroids unavailable"
+        )
+
+        print(
+            data
+        )
+
+        return
+
 
     db = SessionLocal()
 
-    for date in near_earth_objects:
+    inserted = 0
 
-        asteroids = near_earth_objects[date]
 
-        for asteroid in asteroids:
+    for date in data["near_earth_objects"]:
 
-            new_asteroid = Asteroid(
+        for asteroid in data["near_earth_objects"][date]:
 
-                name=asteroid["name"],
 
-                diameter=asteroid[
-                    "estimated_diameter"
-                ]["meters"][
-                    "estimated_diameter_max"
-                ],
+            if not asteroid["close_approach_data"]:
 
-                velocity=float(
-                    asteroid[
-                        "close_approach_data"
-                    ][0][
-                        "relative_velocity"
-                    ][
-                        "kilometers_per_hour"
-                    ]
-                ),
+                continue
 
-                miss_distance=float(
-                    asteroid[
-                        "close_approach_data"
-                    ][0][
-                        "miss_distance"
-                    ][
-                        "kilometers"
-                    ]
-                ),
 
-                hazardous=asteroid[
-                    "is_potentially_hazardous_asteroid"
-                ],
+            clean_name = (
 
-                close_approach_date=asteroid[
-                    "close_approach_data"
-                ][0][
-                    "close_approach_date"
-                ]
+                asteroid["name"]
+
+                .replace(
+                    "(",
+                    ""
+                )
+
+                .replace(
+                    ")",
+                    ""
+                )
+
             )
 
-            db.add(new_asteroid)
+
+            exists = (
+
+                db.query(
+                    Asteroid
+                )
+
+                .filter(
+                    Asteroid.name
+                    ==
+                    clean_name
+                )
+
+                .first()
+
+            )
+
+
+            if exists:
+
+                continue
+
+
+            db.add(
+
+                Asteroid(
+
+                    name=
+                    clean_name,
+
+                    diameter=
+                    asteroid[
+                        "estimated_diameter"
+                    ][
+                        "meters"
+                    ][
+                        "estimated_diameter_max"
+                    ],
+
+                    velocity=
+                    float(
+
+                        asteroid[
+                            "close_approach_data"
+                        ][0][
+                            "relative_velocity"
+                        ][
+                            "kilometers_per_hour"
+                        ]
+
+                    ),
+
+                    miss_distance=
+                    float(
+
+                        asteroid[
+                            "close_approach_data"
+                        ][0][
+                            "miss_distance"
+                        ][
+                            "kilometers"
+                        ]
+
+                    ),
+
+                    hazardous=
+                    asteroid[
+                        "is_potentially_hazardous_asteroid"
+                    ],
+
+                    close_approach_date=
+                    asteroid[
+                        "close_approach_data"
+                    ][0][
+                        "close_approach_date"
+                    ]
+
+                )
+
+            )
+
+            inserted += 1
+
 
     db.commit()
 
-    print("Asteroids saved!")
+
+    print(
+        f"Added {inserted} asteroids"
+    )

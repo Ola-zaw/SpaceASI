@@ -16,6 +16,16 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U postgres
+
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+
   backend:
     build: ./backend
 
@@ -25,15 +35,21 @@ services:
       - "8000:8000"
 
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+
 
   ingestion:
+    environment:
+      NASA_API_KEY: ${NASA_API_KEY}
     build: ./ingestion
 
     container_name: space_ingestion
 
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+
 
 volumes:
   postgres_data:

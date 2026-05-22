@@ -1,69 +1,498 @@
-async function loadISS() {
+const API =
+"http://localhost:8000"
 
-    const response = await fetch(
-        "http://localhost:8000/iss/latest"
-    )
 
-    const data = await response.json()
 
-    document.getElementById("iss-data").innerHTML = `
-        <p>Latitude: ${data.latitude}</p>
-        <p>Longitude: ${data.longitude}</p>
-    `
+let map =
+L.map(
+"iss-map"
+)
+.setView(
+[0,0],
+2
+)
+
+
+L.tileLayer(
+"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+)
+.addTo(
+map
+)
+
+
+
+let marker =
+L.marker(
+[0,0]
+)
+.addTo(
+map
+)
+
+
+let line=
+L.polyline(
+[],
+{
+color:"cyan",
+weight:3
+}
+)
+.addTo(
+map
+)
+
+let path=[]
+
+
+async function loadHistory(){
+
+const response=
+await fetch(
+`${API}/iss/history`
+)
+
+const data=
+await response.json()
+
+
+path=
+data.map(
+p=>[
+p.latitude,
+p.longitude
+]
+)
+
+
+line.setLatLngs(
+path
+)
+
+
+if(
+path.length
+){
+
+marker.setLatLng(
+path[
+path.length-1
+]
+)
+
+map.fitBounds(
+line.getBounds()
+)
+
+}
+
+}
+
+async function loadISS(){
+
+const response=
+await fetch(
+`${API}/iss/latest`
+)
+
+const data=
+await response.json()
+
+
+marker.setLatLng(
+[
+data.latitude,
+data.longitude
+]
+)
+
+
+const newPoint=[
+data.latitude,
+data.longitude
+]
+
+const last=
+path[
+path.length-1
+]
+
+if(
+!last
+||
+last[0]!==newPoint[0]
+||
+last[1]!==newPoint[1]
+){
+
+path.push(
+newPoint
+)
+
 }
 
 
-async function loadAPOD() {
+if(
+path.length>90
+){
 
-    const response = await fetch(
-        "http://localhost:8000/apod/latest"
-    )
+path.shift()
 
-    const data = await response.json()
-
-    document.getElementById("apod-data").innerHTML = `
-        <h3>${data.title}</h3>
-
-        <img src="${data.image_url}" />
-
-        <p>${data.explanation}</p>
-    `
 }
 
 
-async function loadAsteroids() {
+line.setLatLngs(
+path
+)
 
-    const response = await fetch(
-        "http://localhost:8000/asteroids"
-    )
 
-    const data = await response.json()
+if(
+path.length===1
+){
 
-    let html = ""
+map.setView(
+[
+data.latitude,
+data.longitude
+],
+3
+)
 
-    data.slice(0, 5).forEach(asteroid => {
-
-        html += `
-            <div>
-                <h3>${asteroid.name}</h3>
-
-                <p>Diameter: ${asteroid.diameter}</p>
-
-                <p>Velocity: ${asteroid.velocity}</p>
-
-                <p>Hazardous: ${asteroid.hazardous}</p>
-
-                <hr>
-            </div>
-        `
-    })
-
-    document.getElementById("asteroid-data").innerHTML = html
 }
 
 
-loadISS()
+document
+.getElementById(
+"iss-coords"
+)
+.innerHTML=
+
+`
+Latitude:
+${data.latitude}
+
+<br>
+
+Longitude:
+${data.longitude}
+`
+
+}
+
+
+
+async function loadAPOD(){
+
+const response=
+await fetch(
+`${API}/apod/latest`
+)
+
+const data=
+await response.json()
+
+
+document
+.getElementById(
+"apod-container"
+)
+.innerHTML=
+
+`
+
+<h4
+class="apod-title">
+
+${data.title}
+
+</h4>
+
+
+<img
+class="apod-img"
+src="${data.image_url}">
+
+
+<div
+class="apod-description">
+
+${data.explanation}
+
+</div>
+
+`
+
+}
+
+
+
+async function loadAsteroids(){
+
+
+const statsResponse=
+await fetch(
+`${API}/asteroids/stats`
+)
+
+const stats=
+await statsResponse.json()
+
+
+
+const response=
+await fetch(
+`${API}/asteroids`
+)
+
+const data=
+await response.json()
+
+
+
+document
+.getElementById(
+"stats"
+)
+.innerHTML=
+
+`
+
+Total:
+${stats.total}
+
+|
+
+Dangerous:
+${stats.hazardous}
+
+
+
+`
+
+
+let rows=""
+
+
+data.forEach(
+a=>{
+
+rows+=`
+
+<tr>
+
+<td>
+
+${a.name}
+
+</td>
+
+
+<td>
+
+${Math.round(
+a.diameter
+)}
+
+m
+
+</td>
+
+
+<td>
+
+${Math.round(
+a.miss_distance
+)
+.toLocaleString()}
+
+km
+
+</td>
+
+
+<td>
+
+${Math.round(
+a.velocity
+)
+.toLocaleString()}
+
+km/h
+
+</td>
+
+
+<td>
+
+${a.date}
+
+</td>
+
+
+<td
+class="${
+a.hazardous
+?
+"hazard"
+:
+"safe"
+}">
+
+${
+a.hazardous
+?
+"🔴 YES"
+:
+"🟢 NO"
+}
+
+</td>
+
+</tr>
+
+`
+
+}
+)
+
+
+
+document
+.getElementById(
+"asteroids-table-body"
+)
+.innerHTML=
+rows
+
+
+
+createVelocityChart(
+data
+)
+
+
+createDistanceChart(
+data
+)
+
+}
+
+
+
+function createVelocityChart(
+data
+){
+
+new Chart(
+
+document
+.getElementById(
+"asteroidsChart"
+),
+
+{
+
+type:"bar",
+
+data:{
+
+labels:
+data
+.slice(0,8)
+.map(
+x=>
+x.name
+),
+
+datasets:[{
+
+label:
+"Velocity",
+
+data:
+data
+.slice(0,8)
+.map(
+x=>
+x.velocity
+)
+
+}]
+
+}
+
+}
+
+)
+
+}
+
+
+
+function createDistanceChart(
+data
+){
+
+new Chart(
+
+document
+.getElementById(
+"distanceChart"
+),
+
+{
+
+type:"line",
+
+data:{
+
+labels:
+data
+.slice(0,8)
+.map(
+x=>
+x.name
+),
+
+datasets:[{
+
+label:
+"Distance",
+
+data:
+data
+.slice(0,8)
+.map(
+x=>
+x.miss_distance
+)
+
+}]
+
+}
+
+}
+
+)
+
+}
+
+
+
+loadHistory()
+
+setTimeout(
+loadISS,
+500
+)
 
 loadAPOD()
 
 loadAsteroids()
+
+
+setInterval(
+loadISS,
+5000
+)
