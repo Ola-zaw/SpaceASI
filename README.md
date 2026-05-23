@@ -58,6 +58,24 @@ Pobierane dane:
 
 ---
 
+# Dokumentacja API
+
+Interaktywna dokumentacja REST API dostępna jest pod adresem:
+
+```text
+http://localhost:8000/docs
+```
+
+Dokumentacja generowana jest automatycznie przez FastAPI (Swagger UI).
+
+Zawiera:
+- listę endpointów,
+- schematy odpowiedzi,
+- możliwość wykonywania zapytań z poziomu przeglądarki,
+- podgląd formatów JSON.
+
+---
+
 # Architektura systemu i technologie
 
 System został zaprojektowany jako aplikacja wielowarstwowa.
