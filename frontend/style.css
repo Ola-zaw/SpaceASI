@@ -1,28 +1,20 @@
 body{
-background:#081018;
-color:white;
+    background:#081018;
+    color:white;
 }
 
 .container{
-max-width:1500px;
+    max-width:1500px;
 }
 
 .card{
-
-background:#131d2e;
-
-padding:20px;
-
-border-radius:15px;
-
-border:1px solid #273552;
-
-color:white;
-
-margin-bottom:20px;
-
+    background:#131d2e;
+    padding:20px;
+    border-radius:15px;
+    border:1px solid #273552;
+    color:white;
+    margin-bottom:20px;
 }
-
 
 .card h3,
 .card h5,
@@ -30,114 +22,64 @@ th,
 td,
 p,
 div{
-
-color:white !important;
-
+    color:white !important;
 }
 
-
-#iss-map{
-
-height:420px;
-
-width:100%;
-
-border-radius:12px;
-
+#iss-map {
+    width: 100%;
+    height: 550px;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #131d2e;
 }
-
 
 #iss-coords{
-
-color:#ffffff;
-
-text-align:center;
-
-font-size:18px;
-
+    color:#ffffff;
+    text-align:center;
+    font-size:18px;
 }
-
 
 #apod-container{
-
-display:flex;
-
-flex-direction:column;
-
-align-items:center;
-
+    display:flex;
+    flex-direction:column;
+    align-items:center;
 }
-
 
 .apod-img{
-
-width:100%;
-
-max-height:340px;
-
-object-fit:cover;
-
-border-radius:10px;
-
+    width:100%;
+    max-height:340px;
+    object-fit:cover;
+    border-radius:10px;
 }
-
 
 .apod-title{
-
-color:#87d8ff;
-
-margin-top:10px;
-
+    color:#66ccff;
+    margin-top:10px;
 }
-
 
 .apod-description{
-
-color:white;
-
-line-height:1.6;
-
-margin-top:10px;
-
+    color:white;
+    line-height:1.6;
+    margin-top:10px;
 }
-
-
-.table{
-
-color:white !important;
-
-}
-
 
 .table td,
 .table th{
-
-color:white !important;
-
+    color: white;
 }
 
-
-.hazard{
-
-color:#ff7272 !important;
-
-font-weight:bold;
-
+.table td.hazard{
+    color: #ff4b4b !important;
+    font-weight: 700;
 }
 
-
-.safe{
-
-color:#7dff95 !important;
-
-font-weight:bold;
-
+.table td.safe{
+    color: #44ff88 !important;
+    font-weight: 700;
 }
-
 
 #asteroidsChart,
 #distanceChart{
-
-height:220px !important;
-
+    height: 250px !important;
+    width: 100% !important;
 }

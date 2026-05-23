@@ -14,8 +14,9 @@ from sqlalchemy.orm import (
     declarative_base
 )
 
-
-DATABASE_URL = "postgresql://postgres:password@db:5432/space_db"
+DATABASE_URL =os.getenv(
+"DATABASE_URL"
+)
 
 engine = create_engine(DATABASE_URL)
 
@@ -97,6 +98,47 @@ def fetch_apod():
     )
 
     db.commit()
+
+    count = (
+
+    db.query(
+        APOD
+    )
+
+    .count()
+
+    )
+
+
+    if count > 30:
+
+        remove = (
+
+            db.query(
+                APOD
+            )
+
+            .order_by(
+                APOD.id.asc()
+            )
+
+            .limit(
+                count - 30
+            )
+
+            .all()
+
+        )
+
+
+        for row in remove:
+
+            db.delete(
+                row
+            )
+
+
+        db.commit()
 
 
     print(

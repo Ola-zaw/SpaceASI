@@ -14,6 +14,10 @@ try:
 
     fetch_apod()
 
+    print(
+        "APOD updated"
+    )
+
 except Exception as e:
 
     print(
@@ -26,12 +30,19 @@ try:
 
     fetch_asteroids()
 
+    print(
+        "Asteroids updated"
+    )
+
 except Exception as e:
 
     print(
         "ASTEROIDS ERROR:",
         e
     )
+
+
+last_daily_update=time.time()
 
 
 while True:
@@ -51,5 +62,57 @@ while True:
             e
         )
 
+
+    now = time.time()
+
+
+    if (
+
+        now
+
+        -
+
+        last_daily_update
+
+        >
+
+        86400
+
+    ):
+
+        try:
+
+            fetch_apod()
+
+            print(
+                "APOD updated"
+            )
+
+        except Exception as e:
+
+            print(
+                "APOD ERROR:",
+                e
+            )
+
+
+        try:
+
+            fetch_asteroids()
+
+            print(
+                "Asteroids updated"
+            )
+
+        except Exception as e:
+
+            print(
+                "ASTEROIDS ERROR:",
+                e
+            )
+
+
+        last_daily_update = now
+
+
     time.sleep(5)
-    

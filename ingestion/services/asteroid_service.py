@@ -1,5 +1,6 @@
 import os
 import requests
+from datetime import (date, timedelta)
 
 from sqlalchemy import (
     create_engine,
@@ -15,8 +16,9 @@ from sqlalchemy.orm import (
     declarative_base
 )
 
-
-DATABASE_URL = "postgresql://postgres:password@db:5432/space_db"
+DATABASE_URL =os.getenv(
+"DATABASE_URL"
+)
 
 engine = create_engine(DATABASE_URL)
 
@@ -60,11 +62,22 @@ def fetch_asteroids():
         f"?api_key={API_KEY}"
     )
 
+    today = date.today()
+    week_end = (today + timedelta(days=7))
+
     response = requests.get(
         url,
+        params={
+            "start_date":
+            today,
+            "end_date":
+            week_end,
+            "api_key":
+            API_KEY
+        },
         timeout=20
     )
-
+    
     data = response.json()
 
 
@@ -89,9 +102,9 @@ def fetch_asteroids():
     inserted = 0
 
 
-    for date in data["near_earth_objects"]:
+    for day in data["near_earth_objects"]:
 
-        for asteroid in data["near_earth_objects"][date]:
+        for asteroid in data["near_earth_objects"][day]:
 
 
             if not asteroid["close_approach_data"]:
@@ -123,9 +136,25 @@ def fetch_asteroids():
                 )
 
                 .filter(
+
                     Asteroid.name
                     ==
                     clean_name
+
+                )
+
+                .filter(
+
+                    Asteroid.close_approach_date
+
+                    ==
+
+                    asteroid[
+                        "close_approach_data"
+                    ][0][
+                        "close_approach_date"
+                    ]
+
                 )
 
                 .first()
@@ -197,6 +226,51 @@ def fetch_asteroids():
             )
 
             inserted += 1
+
+
+    db.commit()
+
+    cutoff = (
+
+    today
+
+    -
+
+    timedelta(
+        days=30
+    )
+
+    )
+
+
+    old = (
+
+        db.query(
+            Asteroid
+        )
+
+        .filter(
+
+            Asteroid.close_approach_date
+
+            <
+
+            str(
+                cutoff
+            )
+
+        )
+
+        .all()
+
+    )
+
+
+    for row in old:
+
+        db.delete(
+            row
+        )
 
 
     db.commit()

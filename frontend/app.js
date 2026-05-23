@@ -1,393 +1,501 @@
-const API =
-"http://localhost:8000"
+const API = "http://localhost:8000";
+
+
+
+const savedZoom =
+
+localStorage.getItem(
+"mapZoom"
+)
+
+
+
+const savedCenter =
+
+JSON.parse(
+
+localStorage.getItem(
+"mapCenter"
+)
+
+||
+
+"[0,0]"
+
+)
 
 
 
 let map =
+
 L.map(
-"iss-map"
+
+"iss-map",
+
+{
+
+zoomSnap:0,
+
+maxZoom:8,
+
+maxBounds:[
+[-90,-180],
+[90,180]
+],
+
+maxBoundsViscosity:1
+
+}
+
 )
+
 .setView(
-[0,0],
-2
+
+savedCenter,
+
+savedZoom
+
+?
+
+Number(
+savedZoom
 )
+
+:
+
+2
+
+)
+
+
+
+if(
+!savedZoom
+){
+
+map.fitBounds(
+
+[
+
+[0,-180],
+
+[0,180]
+
+]
+
+)
+
+}
+
+
+
+map.setMinZoom(
+map.getZoom()
+)
+
 
 
 L.tileLayer(
-"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+
+"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+
+{
+
+noWrap:true,
+
+bounds:[
+[-90,-180],
+[90,180]
+]
+
+}
+
 )
+
 .addTo(
 map
+)
+
+
+
+map.on(
+
+"moveend",
+
+()=>{
+
+localStorage.setItem(
+
+"mapZoom",
+
+map.getZoom()
+
+)
+
+
+localStorage.setItem(
+
+"mapCenter",
+
+JSON.stringify(
+
+[
+
+map.getCenter().lat,
+
+map.getCenter().lng
+
+]
+
+)
+
+)
+
+}
+
 )
 
 
 
 let marker =
+
 L.marker(
 [0,0]
 )
+
 .addTo(
 map
 )
 
 
-let line=
+
+let line =
+
 L.polyline(
+
 [],
+
 {
+
 color:"cyan",
-weight:3
+
+weight:3,
+
+smoothFactor:1
+
 }
+
 )
+
 .addTo(
 map
 )
 
-let path=[]
 
+let pathSegments = [ [] ]; 
+
+function trimHistory() {
+    let totalPoints = pathSegments.reduce((sum, seg) => sum + seg.length, 0);
+    if (totalPoints > 500) {
+        pathSegments[0].shift(); 
+        if (pathSegments[0].length === 0) {
+            pathSegments.shift();
+        }
+    }
+}
 
 async function loadHistory(){
 
 const response=
+
 await fetch(
 `${API}/iss/history`
 )
 
 const data=
+
 await response.json()
 
+if(
+!data.length
+){
 
-path=
+return
+
+}
+
+pathSegments=[[]]
+
+
+pathSegments[0]=
+
 data.map(
-p=>[
+p=>
+[
 p.latitude,
 p.longitude
 ]
 )
 
-
 line.setLatLngs(
-path
+pathSegments
 )
-
-
-if(
-path.length
-){
 
 marker.setLatLng(
-path[
-path.length-1
-]
-)
 
-map.fitBounds(
-line.getBounds()
-)
-
-}
-
-}
-
-async function loadISS(){
-
-const response=
-await fetch(
-`${API}/iss/latest`
-)
-
-const data=
-await response.json()
-
-
-marker.setLatLng(
-[
-data.latitude,
-data.longitude
-]
-)
-
-
-const newPoint=[
-data.latitude,
-data.longitude
+pathSegments[0][
+pathSegments[0].length-1
 ]
 
-const last=
-path[
-path.length-1
-]
-
-if(
-!last
-||
-last[0]!==newPoint[0]
-||
-last[1]!==newPoint[1]
-){
-
-path.push(
-newPoint
 )
 
 }
 
+async function loadISS() {
+    const response = await fetch(`${API}/iss/latest`);
+    const data = await response.json();
 
-if(
-path.length>90
-){
+    const newPoint = [data.latitude, data.longitude];
+    let currentSegment = pathSegments[pathSegments.length - 1];
 
-path.shift()
+    if (currentSegment.length > 0) {
+        let lastPoint = currentSegment[currentSegment.length - 1];
+        
+        if (Math.abs(newPoint[1] - lastPoint[1]) > 180) {
+            pathSegments.push([]); 
+            currentSegment = pathSegments[pathSegments.length - 1];
+        }
+    }
+
+    currentSegment.push(newPoint);
+    trimHistory();
+
+    line.setLatLngs(pathSegments);
+    marker.setLatLng(newPoint);
+
+    document.getElementById("iss-coords").innerHTML = `
+        Latitude: ${data.latitude.toFixed(4)} | Longitude: ${data.longitude.toFixed(4)}
+    `;
+}
+
+async function loadAPOD() {
+    const response = await fetch(`${API}/apod/latest`);
+    const data = await response.json();
+    document.getElementById("apod-container").innerHTML = `
+        <h4 class="apod-title">${data.title}</h4>
+        ${data.image_url ? `<img class="apod-img" src="${data.image_url}">` : `<div>No image</div>`}
+        <div class="apod-description">${data.explanation}</div>
+    `;
+}
+
+async function loadAsteroids() {
+
+    const statsResponse =
+    await fetch(
+        `${API}/asteroids/stats`
+    )
+
+    const stats =
+    await statsResponse.json()
+
+
+    const response =
+    await fetch(
+        `${API}/asteroids`
+    )
+
+    const data =
+    await response.json()
+
+
+
+    document
+    .getElementById(
+        "stats"
+    )
+    .innerHTML =
+
+    `
+
+    Total:
+    ${stats.total}
+
+    |
+
+    Dangerous:
+    ${stats.hazardous}
+
+    |
+
+    ${stats.start_date}
+
+    →
+
+    ${stats.end_date}
+
+    `
+
+    const unique =
+
+    Array.from(
+
+    new Map(
+
+    data.map(
+
+    a=>
+
+    [
+
+    a.key,
+
+    a
+
+    ]
+
+    )
+
+    )
+
+    .values()
+
+    )
+
+
+
+    const closest =
+
+    unique
+
+    .sort(
+
+    (
+
+    a,
+
+    b
+
+    )=>
+
+    new Date(
+    a.date
+    )
+
+    -
+
+    new Date(
+    b.date
+    )
+
+    )
+
+    .slice(
+    0,
+    10
+    )
+
+
+
+    let rows = ""
+
+
+
+    closest.forEach(
+
+        a => {
+
+            rows += `
+
+            <tr>
+
+                <td>
+
+                    ${a.name}
+
+                </td>
+
+                <td>
+
+                    ${a.diameter}m
+
+                </td>
+
+                <td>
+
+                    ${a.miss_distance.toLocaleString()}km
+
+                </td>
+
+                <td>
+
+                    ${a.velocity.toLocaleString()}km/h
+
+                </td>
+
+                <td>
+
+                    ${a.date}
+
+                </td>
+
+                <td
+
+                class="${
+                    a.hazardous
+                    ?
+                    "hazard"
+                    :
+                    "safe"
+                }"
+
+                >
+
+                ${
+                    a.hazardous
+                    ?
+                    "YES"
+                    :
+                    "NO"
+                }
+
+                </td>
+
+            </tr>
+
+            `
+
+        }
+
+    )
+
+
+
+    document
+    .getElementById(
+        "asteroids-table-body"
+    )
+    .innerHTML =
+    rows
+
+
+
+    createVelocityChart(
+        closest
+    )
+
+
+    createDistanceChart(
+        closest
+    )
 
 }
 
 
-line.setLatLngs(
-path
-)
-
-
-if(
-path.length===1
-){
-
-map.setView(
-[
-data.latitude,
-data.longitude
-],
-3
-)
-
-}
-
-
-document
-.getElementById(
-"iss-coords"
-)
-.innerHTML=
-
-`
-Latitude:
-${data.latitude}
-
-<br>
-
-Longitude:
-${data.longitude}
-`
-
-}
-
-
-
-async function loadAPOD(){
-
-const response=
-await fetch(
-`${API}/apod/latest`
-)
-
-const data=
-await response.json()
-
-
-document
-.getElementById(
-"apod-container"
-)
-.innerHTML=
-
-`
-
-<h4
-class="apod-title">
-
-${data.title}
-
-</h4>
-
-
-<img
-class="apod-img"
-src="${data.image_url}">
-
-
-<div
-class="apod-description">
-
-${data.explanation}
-
-</div>
-
-`
-
-}
-
-
-
-async function loadAsteroids(){
-
-
-const statsResponse=
-await fetch(
-`${API}/asteroids/stats`
-)
-
-const stats=
-await statsResponse.json()
-
-
-
-const response=
-await fetch(
-`${API}/asteroids`
-)
-
-const data=
-await response.json()
-
-
-
-document
-.getElementById(
-"stats"
-)
-.innerHTML=
-
-`
-
-Total:
-${stats.total}
-
-|
-
-Dangerous:
-${stats.hazardous}
-
-
-
-`
-
-
-let rows=""
-
-
-data.forEach(
-a=>{
-
-rows+=`
-
-<tr>
-
-<td>
-
-${a.name}
-
-</td>
-
-
-<td>
-
-${Math.round(
-a.diameter
-)}
-
-m
-
-</td>
-
-
-<td>
-
-${Math.round(
-a.miss_distance
-)
-.toLocaleString()}
-
-km
-
-</td>
-
-
-<td>
-
-${Math.round(
-a.velocity
-)
-.toLocaleString()}
-
-km/h
-
-</td>
-
-
-<td>
-
-${a.date}
-
-</td>
-
-
-<td
-class="${
-a.hazardous
-?
-"hazard"
-:
-"safe"
-}">
-
-${
-a.hazardous
-?
-"🔴 YES"
-:
-"🟢 NO"
-}
-
-</td>
-
-</tr>
-
-`
-
-}
-)
-
-
-
-document
-.getElementById(
-"asteroids-table-body"
-)
-.innerHTML=
-rows
-
-
-
-createVelocityChart(
-data
-)
-
-
-createDistanceChart(
-data
-)
-
-}
-
-
-
-function createVelocityChart(
-data
-){
+function createVelocityChart(data){
 
 new Chart(
 
-document
-.getElementById(
+document.getElementById(
 "asteroidsChart"
 ),
 
@@ -398,9 +506,7 @@ type:"bar",
 data:{
 
 labels:
-data
-.slice(0,8)
-.map(
+data.map(
 x=>
 x.name
 ),
@@ -408,18 +514,107 @@ x.name
 datasets:[{
 
 label:
-"Velocity",
+"Velocity (km/h)",
 
 data:
-data
-.slice(0,8)
-.map(
+data.map(
 x=>
 x.velocity
+),
+
+backgroundColor:
+
+data.map(
+x=>
+
+x.hazardous
+
+?
+
+"#ff4444"
+
+:
+
+"#66ccff"
+
 )
 
 }]
 
+},
+
+options:{
+
+maintainAspectRatio:false,
+
+plugins:{
+
+legend:{
+
+labels:{
+
+color:"#b0b0b0"
+
+}
+
+}
+
+},
+
+scales:{
+
+x:{
+
+ticks:{
+
+color:"#b0b0b0",
+
+maxRotation:45,
+
+minRotation:45
+
+},
+
+grid:{
+
+color:"#404b63",
+
+display:false
+
+}
+
+},
+
+y:{
+
+beginAtZero:true,
+
+ticks:{
+
+color:"#b0b0b0",
+
+maxTicksLimit:6
+
+},
+
+border:{
+
+display:true,
+
+color:"#404b63"
+
+},
+
+grid:{
+
+color:"#404b63"
+
+}
+
+}
+
+}
+
 }
 
 }
@@ -428,16 +623,11 @@ x.velocity
 
 }
 
-
-
-function createDistanceChart(
-data
-){
+function createDistanceChart(data){
 
 new Chart(
 
-document
-.getElementById(
+document.getElementById(
 "distanceChart"
 ),
 
@@ -448,9 +638,7 @@ type:"line",
 data:{
 
 labels:
-data
-.slice(0,8)
-.map(
+data.map(
 x=>
 x.name
 ),
@@ -458,18 +646,102 @@ x.name
 datasets:[{
 
 label:
-"Distance",
+"Distance (km)",
 
 data:
-data
-.slice(0,8)
-.map(
+data.map(
 x=>
 x.miss_distance
-)
+),
+
+borderColor:
+"#66ccff",
+
+pointBackgroundColor:
+
+data.map(
+x=>
+
+x.hazardous
+
+?
+
+"#ff4444"
+
+:
+
+"#66ccff"
+
+),
+
+pointRadius:6
 
 }]
 
+},
+
+options:{
+
+maintainAspectRatio:false,
+
+plugins:{
+
+legend:{
+
+labels:{
+
+color:"#b0b0b0"
+
+}
+
+}
+
+},
+
+scales:{
+
+x:{
+
+ticks:{
+
+color:"#b0b0b0",
+
+maxRotation:45,
+
+minRotation:45
+
+},
+
+grid:{
+
+color:"#404b63"
+
+}
+
+},
+
+y:{
+
+beginAtZero:true,
+
+ticks:{
+
+color:"#b0b0b0",
+
+maxTicksLimit:6
+
+},
+
+grid:{
+
+color:"#404b63"
+
+}
+
+}
+
+}
+
 }
 
 }
@@ -478,21 +750,22 @@ x.miss_distance
 
 }
 
+async function init(){
 
 
 loadHistory()
 
-setTimeout(
-loadISS,
-500
-)
+
+loadISS()
+
 
 loadAPOD()
+
 
 loadAsteroids()
 
 
-setInterval(
-loadISS,
-5000
-)
+}
+
+init();
+setInterval(loadISS, 5000);

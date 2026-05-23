@@ -1,4 +1,5 @@
 import requests
+import os
 
 from sqlalchemy import (
     create_engine,
@@ -15,8 +16,9 @@ from sqlalchemy.orm import (
 
 from sqlalchemy.sql import func
 
-
-DATABASE_URL = "postgresql://postgres:password@db:5432/space_db"
+DATABASE_URL =os.getenv(
+"DATABASE_URL"
+)
 
 engine = create_engine(DATABASE_URL)
 
@@ -65,5 +67,46 @@ def fetch_iss():
     db.add(new_position)
 
     db.commit()
+
+    count = (
+
+    db.query(
+        ISSPosition
+    )
+
+    .count()
+
+    )
+
+
+    if count > 5000:
+
+        remove = (
+
+            db.query(
+                ISSPosition
+            )
+
+            .order_by(
+                ISSPosition.id.asc()
+            )
+
+            .limit(
+                count - 5000
+            )
+
+            .all()
+
+        )
+
+
+        for row in remove:
+
+            db.delete(
+                row
+            )
+
+
+        db.commit()
 
     print("ISS position saved!")
