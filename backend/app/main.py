@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -67,19 +68,53 @@ def get_db():
 
 
 
-@app.get("/")
+@app.get(
+
+"/",
+
+summary=
+"API status"
+
+)
 def root():
 
     return {
 
-        "message":
-        "Backend działa"
+        "service":
+        "Space Dashboard API",
+
+        "status":
+        "running",
+
+        "environment":
+
+        os.getenv(
+            "APP_ENV"
+        ),
+
+        "docs":
+
+        "/docs"
 
     }
 
 
 
-@app.get("/iss/latest")
+@app.get(
+
+    "/iss/latest",
+
+    summary=
+    "Get current ISS position",
+
+    description=
+    """
+    Returns latest recorded position of the
+    International Space Station.
+    Updated every 5 seconds.
+    """
+
+)
 def get_latest_iss():
 
     with get_db() as db:
@@ -132,7 +167,17 @@ def get_latest_iss():
 
 
 
-@app.get("/iss/history")
+@app.get(
+
+"/iss/history",
+
+summary=
+"Get ISS trajectory",
+
+description=
+"Returns historical ISS positions used to draw the trail (last 500 points)."
+
+)
 def get_iss_history():
 
     with get_db() as db:
@@ -144,7 +189,7 @@ def get_iss_history():
             )
 
             .order_by(
-                ISSPosition.id.desc()
+                ISSPosition.created_at.desc()
             )
 
             .limit(
@@ -167,7 +212,10 @@ def get_iss_history():
                 x.latitude,
 
                 "longitude":
-                x.longitude
+                x.longitude,
+
+                "created_at":
+                x.created_at
 
             }
 
@@ -177,7 +225,20 @@ def get_iss_history():
         ]
 
 
-@app.get("/asteroids")
+@app.get(
+
+"/asteroids",
+
+summary=
+"Get asteroid approaches",
+
+description=
+"""
+Returns asteroid approaches
+for the next 7 days.
+"""
+
+)
 def get_asteroids():
 
     with get_db() as db:
@@ -280,7 +341,22 @@ def get_asteroids():
 
 
 
-@app.get("/asteroids/stats")
+@app.get(
+
+"/asteroids/stats",
+
+summary=
+"Get asteroid statistics",
+
+description=
+"""
+Returns:
+- total approaches
+- hazardous approaches
+- date range
+"""
+
+)
 def asteroid_stats():
 
     with get_db() as db:
@@ -430,7 +506,20 @@ def asteroid_stats():
         }
 
 
-@app.get("/apod/latest")
+@app.get(
+
+"/apod/latest",
+
+summary=
+"Get Astronomy Picture of the Day",
+
+description=
+"""
+Returns latest APOD image
+or video with description.
+"""
+
+)
 def get_latest_apod():
 
     with get_db() as db:

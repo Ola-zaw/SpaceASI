@@ -1,0 +1,15 @@
+services:
+
+  backend:
+
+    environment:
+      APP_ENV: test
+
+
+  ingestion:
+
+    environment:
+
+      APP_ENV: test
+
+      NASA_API_KEY: DEMO_KEY

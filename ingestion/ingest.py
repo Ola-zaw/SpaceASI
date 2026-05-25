@@ -3,9 +3,20 @@ import time
 from services.iss_service import fetch_iss
 from services.apod_service import fetch_apod
 from services.asteroid_service import fetch_asteroids
+import logging
+
+logging.basicConfig(
+
+    level=logging.INFO,
+
+    format="%(asctime)s | %(levelname)s | %(message)s"
+
+)
+
+logger = logging.getLogger(__name__)
 
 
-print(
+logger.info(
     "Starting ingestion..."
 )
 
@@ -14,15 +25,14 @@ try:
 
     fetch_apod()
 
-    print(
+    logger.info(
         "APOD updated"
     )
 
 except Exception as e:
 
-    print(
-        "APOD ERROR:",
-        e
+    logger.error(
+        f"APOD ERROR: {e}"
     )
 
 
@@ -30,17 +40,15 @@ try:
 
     fetch_asteroids()
 
-    print(
+    logger.info(
         "Asteroids updated"
     )
 
 except Exception as e:
 
-    print(
-        "ASTEROIDS ERROR:",
-        e
+    logger.error(
+        f"Asteroids ERROR: {e}"
     )
-
 
 last_daily_update=time.time()
 
@@ -51,15 +59,14 @@ while True:
 
         fetch_iss()
 
-        print(
+        logger.info(
             "ISS updated"
         )
 
     except Exception as e:
 
-        print(
-            "ISS ERROR:",
-            e
+        logger.error(
+            f"ISS ERROR: {e}"
         )
 
 

@@ -204,17 +204,65 @@ function trimHistory() {
     }
 }
 
+// async function loadHistory(){
+
+// const response=
+
+// await fetch(
+// `${API}/iss/history`
+// )
+
+// const data=
+
+// await response.json()
+
+// if(
+// !data.length
+// ){
+
+// return
+
+// }
+
+// pathSegments=[[]]
+
+
+// pathSegments[0]=
+
+// data.map(
+// p=>
+// [
+// p.latitude,
+// p.longitude
+// ]
+// )
+
+// line.setLatLngs(
+// pathSegments
+// )
+
+// marker.setLatLng(
+
+// pathSegments[0][
+// pathSegments[0].length-1
+// ]
+
+// )
+
+// }
+
 async function loadHistory(){
 
-const response=
+const response =
 
 await fetch(
 `${API}/iss/history`
 )
 
-const data=
+const data =
 
 await response.json()
+
 
 if(
 !data.length
@@ -224,27 +272,108 @@ return
 
 }
 
+
+let start = 0
+
+
+for(
+
+let i=data.length-1;
+
+i>0;
+
+i--
+
+){
+
+const curr =
+
+new Date(
+data[i].created_at
+)
+
+
+const prev =
+
+new Date(
+data[i-1].created_at
+)
+
+
+const diff =
+
+(
+
+curr
+
+-
+
+prev
+
+)
+
+/
+
+1000
+
+
+if(
+
+diff
+
+>
+
+90
+
+){
+
+start=i
+
+break
+
+}
+
+}
+
+
+const history =
+
+data.slice(
+start
+)
+
+
 pathSegments=[[]]
 
 
 pathSegments[0]=
 
-data.map(
+history.map(
+
 p=>
+
 [
+
 p.latitude,
+
 p.longitude
+
 ]
+
 )
+
 
 line.setLatLngs(
 pathSegments
 )
 
+
 marker.setLatLng(
 
 pathSegments[0][
+
 pathSegments[0].length-1
+
 ]
 
 )
@@ -279,13 +408,80 @@ async function loadISS() {
 }
 
 async function loadAPOD() {
-    const response = await fetch(`${API}/apod/latest`);
-    const data = await response.json();
-    document.getElementById("apod-container").innerHTML = `
-        <h4 class="apod-title">${data.title}</h4>
-        ${data.image_url ? `<img class="apod-img" src="${data.image_url}">` : `<div>No image</div>`}
-        <div class="apod-description">${data.explanation}</div>
-    `;
+
+    const response =
+        await fetch(
+            `${API}/apod/latest`
+        );
+
+    const data =
+        await response.json();
+
+
+    let media;
+
+
+    if (
+
+        data.image_url.endsWith(".mp4")
+
+        ||
+
+        data.image_url.includes("youtube")
+
+    ) {
+
+        media = `
+
+            <video
+                class="apod-img"
+                controls>
+
+                <source
+                    src="${data.image_url}">
+
+            </video>
+
+        `;
+
+    }
+
+    else {
+
+        media = `
+
+            <img
+                class="apod-img"
+                src="${data.image_url}"
+                alt="${data.title}">
+
+        `;
+
+    }
+
+
+    document
+        .getElementById(
+            "apod-container"
+        )
+        .innerHTML = `
+
+            <h4 class="apod-title">
+
+                ${data.title}
+
+            </h4>
+
+            ${media}
+
+            <div class="apod-description">
+
+                ${data.explanation}
+
+            </div>
+
+        `;
+
 }
 
 async function loadAsteroids() {

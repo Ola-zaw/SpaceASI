@@ -1,0 +1,12 @@
+services:
+
+  backend:
+
+    environment:
+      APP_ENV: development
+
+
+  ingestion:
+
+    environment:
+      APP_ENV: development
