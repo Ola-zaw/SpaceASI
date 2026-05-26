@@ -5,7 +5,6 @@ from sqlalchemy import Boolean
 
 from app.database import Base
 
-# tworzy tabele iss_positions
 class ISSPosition(Base):
     __tablename__ = "iss_positions"
 
@@ -48,3 +47,4 @@ class Asteroid(Base):
     hazardous = Column(Boolean)
 
     close_approach_date = Column(String)
+    

@@ -39,3 +39,4 @@ def test_asteroids():
     )
 
     assert response.status_code == 200
+    
