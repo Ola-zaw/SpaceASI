@@ -177,7 +177,7 @@ Mapa:
 - zapamiętywanie ostatniego położenia i zoomu po odświeżeniu strony.
 
 Tabela asteroid:
-- prezentuje 10 najbliższych zbliżeń,
+- prezentuje 10 najbliższych zbliżeń.
 
 Wykresy:
 - prędkość asteroid,
