@@ -444,3 +444,7 @@ Poniższy obrazek przedstawia wyniki testu wydajnościowego.
 ![Test wydajnościowy](img/test_wydajnosciowy1.png)
 
 System poprawnie obsłużył równoległe zapytania bez błędów i utrzymał niski czas odpowiedzi.
+
+### Podział pracy
+- Katarzyna Skoczylas: środowisko Docker, testy jednostkowe i wydajnościowe, Backend, dokumentacja
+- Aleksandra Zawadka: Frontend, Swagger, Data Ingestion, dokumentacja
